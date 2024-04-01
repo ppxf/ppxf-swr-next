@@ -1,15 +1,14 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { type NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { type NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: "credentials",
       credentials: {
         email: {
           label: "邮箱",
@@ -24,33 +23,32 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (credentials) {
-          const { email, password } = credentials;
+          const { email, password } = credentials
 
           const userWithEmail = await prisma.user.findUnique({
             where: { email },
-          });
+          })
           if (!userWithEmail) {
-            throw new Error("Email is invalid,please to sign up");
+            throw new Error("Email is invalid,please to sign up")
           }
           if (userWithEmail.password !== password) {
-            throw new Error("password is invalid");
+            throw new Error("password is invalid")
           }
 
           if (userWithEmail) {
-            return userWithEmail;
+            return userWithEmail
           } else {
-            throw new Error("Not Authorized.");
+            throw new Error("Not Authorized.")
           }
         } else {
-          throw new Error("Not Authorized.");
+          throw new Error("Not Authorized.")
         }
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
   ],
+  pages: {
+    signIn: "/login",
+  },
   session: {
     strategy: "jwt",
   },
@@ -60,17 +58,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
-        token.id = user.id;
+        token.id = user.id
       }
 
-      return token;
+      return token
     },
     session: async ({ session, token }) => {
       if (token) {
-        session.user.id = token.id as string;
+        session.user.id = token.id as string
       }
 
-      return session;
+      return session
     },
   },
-};
+}

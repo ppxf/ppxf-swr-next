@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useMutationFetch } from "@/hooks/swr"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { signIn } from "next-auth/react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import toast from "react-hot-toast"
 import { z } from "zod"
@@ -11,7 +11,7 @@ import { emailPasswordSchema } from "@/lib/schema"
 
 type Inputs = z.infer<typeof emailPasswordSchema>
 
-export default function RegisterForm() {
+export default function LoginButton() {
   const router = useRouter()
   const {
     register,
@@ -20,18 +20,20 @@ export default function RegisterForm() {
   } = useForm<Inputs>({
     resolver: zodResolver(emailPasswordSchema),
   })
-  const { isMutating, trigger } = useMutationFetch("api/register")
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      const result = await trigger(data)
+      const result = await signIn("credentials", {
+        redirect: false,
+        ...data,
+      })
 
-      if (result) {
-        toast.success("注册成功")
-        router.push("/login")
+      if (result?.ok) {
+        toast.success("登录成功")
+        router.push("/")
       }
-    } catch (err) {
-      toast.error(err as string)
+    } catch (error) {
+      toast.error(error as string)
     }
   }
 
@@ -40,7 +42,7 @@ export default function RegisterForm() {
       onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
       className="flex w-80 flex-col items-center justify-center rounded-xl bg-zinc-800/25 p-10"
     >
-      <h1 className="mb-5 w-full text-center text-3xl text-white">注册</h1>
+      <h1 className="mb-5 w-full text-center text-3xl text-white">登录</h1>
       <label className="mb-2 self-start text-white" htmlFor="email">
         邮箱:
       </label>
@@ -64,11 +66,10 @@ export default function RegisterForm() {
         <p className="text-sm text-red-500">{errors.password.message}</p>
       )}
       <button
-        disabled={isMutating}
-        className="mt-5 h-10 w-full rounded-lg bg-red-600 text-white"
+        className="mt-5 h-10 w-full rounded-lg bg-gray-600 text-white"
         type="submit"
       >
-        注册
+        登录
       </button>
     </form>
   )
