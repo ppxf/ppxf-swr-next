@@ -31,6 +31,7 @@ export default function LoginButton() {
       if (result?.ok) {
         toast.success("登录成功")
         router.push("/")
+        router.refresh()
       }
     } catch (error) {
       toast.error(error as string)

@@ -5,6 +5,8 @@ import useSWR from "swr"
 import useSWRInfinite from "swr/infinite"
 import useSWRMutation from "swr/mutation"
 
+export const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
 export const postFetcher = ({
   url,
   body,
@@ -36,16 +38,10 @@ export const mutationFetcher = async (
     },
   }).then((res) => res.json())
 
-export const useFetch = (
-  url: string,
-  body: Record<string | number | symbol, unknown>
-) => {
-  const { data, error, isLoading, isValidating } = useSWR(
-    {
-      url,
-      body,
-    },
-    postFetcher,
+export const useFetch = (url: string) => {
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    url,
+    fetcher,
     {
       // treat movie results as immutable
       keepPreviousData: true,
@@ -61,6 +57,7 @@ export const useFetch = (
     error,
     isLoading,
     isValidating,
+    mutate,
   }
 }
 
@@ -77,7 +74,7 @@ export const useInfiniteFetch = (
     ) => {
       if (previousPageData && !previousPageData.data) return null
 
-      const mergeOptions = Object.assign(body, {
+      const mergeOptions = Object.assign(body!, {
         pageSize: pageIndex + 1,
       })
 
